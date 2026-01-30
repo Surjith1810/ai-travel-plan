@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Home from './pages/Home';
+import SavedTrips from './pages/SavedTrips';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -14,6 +15,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Home />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/saved-trips"
+        element={
+          <ProtectedRoute>
+            <SavedTrips />
           </ProtectedRoute>
         }
       />

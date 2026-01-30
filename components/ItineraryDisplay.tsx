@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
 import { TripItinerary, DayItinerary, Activity } from '../types';
-import { Sun, Sunset, Moon, MapPin, Clock, ArrowRight, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sun, Sunset, Moon, MapPin, Clock, ArrowRight, RefreshCw, ChevronDown, ChevronUp, Bookmark, Check, Loader2 } from 'lucide-react';
 
 interface ItineraryDisplayProps {
   itinerary: TripItinerary;
   onReset: () => void;
   onRegenerate?: () => void;
   isRegenerating?: boolean;
+  onSave?: () => void;
+  isSaving?: boolean;
+  isSaved?: boolean;
 }
 
-const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ itinerary, onReset, onRegenerate, isRegenerating }) => {
+const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
+  itinerary,
+  onReset,
+  onRegenerate,
+  isRegenerating,
+  onSave,
+  isSaving,
+  isSaved
+}) => {
   // Generate a seed based on destination to keep header image consistent but unique to the trip
   const headerSeed = itinerary.tripTitle.length + itinerary.destination.length;
   // Using flux model for header as well for high quality
@@ -45,7 +56,26 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ itinerary, onReset,
           <h2 className="text-3xl font-bold text-slate-900">Your Itinerary</h2>
           <p className="text-slate-500 mt-1">Ready for your adventure?</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap justify-center sm:justify-end">
+          {onSave && (
+            <button
+              onClick={onSave}
+              disabled={isSaving || isSaved}
+              className={`group flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-sm hover:shadow-md ${isSaved
+                  ? 'bg-green-50 text-green-600 border border-green-200'
+                  : 'bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200 hover:border-amber-300'
+                } disabled:opacity-70 disabled:cursor-not-allowed`}
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isSaved ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Bookmark className="h-4 w-4" />
+              )}
+              {isSaving ? 'Saving...' : isSaved ? 'Saved!' : 'Save Trip'}
+            </button>
+          )}
           {onRegenerate && (
             <button
               onClick={onRegenerate}

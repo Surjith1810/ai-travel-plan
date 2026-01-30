@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import TripForm from '../components/TripForm';
 import ItineraryDisplay from '../components/ItineraryDisplay';
 import Logo from '../components/Logo';
 import { TripInput, TripItinerary } from '../types';
 import { generateItinerary } from '../services/geminiService';
-import { Sparkles, AlertCircle, LogOut } from 'lucide-react';
+import { saveItinerary } from '../services/itineraryService';
+import { Sparkles, AlertCircle, LogOut, Bookmark } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Home: React.FC = () => {
     const [itinerary, setItinerary] = useState<TripItinerary | null>(null);
     const [loading, setLoading] = useState(false);
     const [regenerating, setRegenerating] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [lastInput, setLastInput] = useState<TripInput | null>(null);
     const { logout, user } = useAuth();
@@ -62,6 +66,22 @@ const Home: React.FC = () => {
     const handleReset = () => {
         setItinerary(null);
         setError(null);
+        setSaved(false);
+    };
+
+    const handleSave = async () => {
+        if (!user || !itinerary || !lastInput) return;
+
+        setSaving(true);
+        try {
+            await saveItinerary(user.uid, itinerary, lastInput);
+            setSaved(true);
+        } catch (err) {
+            console.error('Error saving itinerary:', err);
+            setError('Failed to save trip. Please try again.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -80,6 +100,13 @@ const Home: React.FC = () => {
                         </div>
 
                         <div className="flex items-center gap-4">
+                            <Link
+                                to="/saved-trips"
+                                className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 text-sm font-medium transition-colors bg-white/50 px-3 py-1.5 rounded-full border border-slate-200 hover:border-indigo-200 hover:bg-indigo-50"
+                            >
+                                <Bookmark className="h-4 w-4" />
+                                <span className="hidden sm:inline">Saved Trips</span>
+                            </Link>
                             <span className="text-sm text-slate-500 hidden sm:block">
                                 Welcome, {user?.displayName || user?.email?.split('@')[0]}
                             </span>
@@ -161,6 +188,9 @@ const Home: React.FC = () => {
                         onReset={handleReset}
                         onRegenerate={handleRegenerate}
                         isRegenerating={regenerating}
+                        onSave={handleSave}
+                        isSaving={saving}
+                        isSaved={saved}
                     />
                 )}
             </main>
