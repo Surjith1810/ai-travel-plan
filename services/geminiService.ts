@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { TripInput, TripItinerary } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: "AIzaSyDBN6OlOonwH1DAB9K5untl7hWQ_V2UcMQ" });
 
 export const generateItinerary = async (input: TripInput): Promise<TripItinerary> => {
   const prompt = `
