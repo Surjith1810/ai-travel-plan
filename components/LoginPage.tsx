@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import Logo from './Logo';
+import { app } from '../services/firebase';
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -11,28 +13,53 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState<string | null>(null);
+
+  const auth = getAuth(app);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
 
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    setError(null);
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       onLogin();
-    }, 1000);
+    } catch (err: any) {
+      console.error(err);
+      setError("Failed to sign in. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setError(null);
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      onLogin();
+    } catch (err: any) {
+      console.error(err);
+      setError("Failed to sign in with Google.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      
+
       {/* Dynamic Background with Animations */}
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-         <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-            <div className="absolute -top-1/2 -left-1/4 w-full h-full bg-blue-500/30 rounded-full blur-3xl animate-blob"></div>
-            <div className="absolute bottom-0 right-0 w-3/4 h-3/4 bg-pink-500/30 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
-            <div className="absolute top-1/2 left-1/3 w-1/3 h-1/3 bg-purple-400/30 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
-         </div>
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+          <div className="absolute -top-1/2 -left-1/4 w-full h-full bg-blue-500/30 rounded-full blur-3xl animate-blob"></div>
+          <div className="absolute bottom-0 right-0 w-3/4 h-3/4 bg-pink-500/30 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
+          <div className="absolute top-1/2 left-1/3 w-1/3 h-1/3 bg-purple-400/30 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
+        </div>
       </div>
 
       {/* Header Section */}
@@ -54,6 +81,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-fade-in-up delay-200">
         <div className="bg-white/90 backdrop-blur-xl py-8 px-4 shadow-2xl shadow-black/20 sm:rounded-3xl sm:px-10 border border-white/50">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                 Email address
@@ -149,10 +181,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="w-full inline-flex justify-center py-2.5 px-4 border border-slate-200 rounded-xl shadow-sm bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-100 transition-all transform hover:-translate-y-0.5">
-                 <svg className="h-5 w-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                   <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
-                 </svg>
+              <button onClick={handleGoogleLogin} type="button" className="w-full inline-flex justify-center py-2.5 px-4 border border-slate-200 rounded-xl shadow-sm bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-100 transition-all transform hover:-translate-y-0.5">
+                <svg className="h-5 w-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+                </svg>
               </button>
               <button className="w-full inline-flex justify-center py-2.5 px-4 border border-slate-200 rounded-xl shadow-sm bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-100 transition-all transform hover:-translate-y-0.5">
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
